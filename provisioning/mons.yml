@@ -1,0 +1,54 @@
+---
+- name: Provision monitor compute instances
+  hosts: localhost
+  gather_facts: no
+  become: no
+  tasks:
+    - name: Launch ceph monitor compute instances
+      os_server:
+        auth: "{{ os_auth }}"
+        name: ceph-mon-{{ item }}
+        auto_ip: no
+        image: "{{ os_image }}"
+        flavor: "{{ os_flavor }}"
+        key_name: "{{ os_key_pair }}"
+        nics:
+          - net-name: "{{ os_network_name }}"
+        security_groups:
+          - ssh
+          - ceph
+        wait: no
+        state: present
+      with_sequence: start=0 end={{ mon_count - 1 }} stride=1
+
+    - name: Wait a little while for instances to get out of BUILD state
+      pause:
+        seconds: 20
+
+    - name: Wait for all monitor compute instances to be ready
+      os_server:
+        auth: "{{ os_auth }}"
+        name: ceph-mon-{{ item }}
+        auto_ip: no
+        image: "{{ os_image }}"
+        flavor: "{{ os_flavor }}"
+        key_name: "{{ os_key_pair }}"
+        nics:
+          - net-name: "{{ os_network_name }}"
+        volumes:
+          - ceph-storage-{{ item }}
+        security_groups:
+          - ssh
+          - ceph
+        wait: yes
+        state: present
+      with_sequence: start=0 end={{ mon_count - 1 }} stride=1
+      register: ceph_mon_compute_instances
+
+    - name: Add all provisioned monitor instances to inventory
+      add_host:
+        name: "{{ item.1.openstack.name }}"
+        groups: ceph,cephmons
+        ansible_host: "{{ item.1.openstack.private_v4 }}"
+      changed_when: false
+      with_indexed_items: ceph_mon_compute_instances.results

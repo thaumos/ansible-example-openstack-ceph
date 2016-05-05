@@ -1,0 +1,68 @@
+---
+- name: Load Tower credentials
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  become: no
+  tasks:
+    - name: Load Tower cloud credential config when it is present
+      include_vars: "{{ os_config_file }}"
+      when: os_config_file != ''
+
+    - name: Set necessary variables when Tower cloud credential config is present
+      set_fact:
+        os_auth:
+          auth_url: "{{ clouds.devstack.auth.auth_url }}"
+          username: "{{ clouds.devstack.auth.username }}"
+          password: "{{ clouds.devstack.auth.password }}"
+          project_name: "{{ clouds.devstack.auth.project_name }}"
+      when: os_config_file != ''
+
+    - name: Fail if fallback environment variables are not set
+      fail:
+        msg: "missing required environment variable: '{{ item }}'"
+      when: os_config_file == '' and lookup('env', item) is undefined
+      with_items:
+        - OS_AUTH_URL
+        - OS_USERNAME
+        - OS_PASSWORD
+        - OS_PROJECT
+
+- include: provisioning/common.yml
+- include: provisioning/osds.yml
+- include: provisioning/mons.yml
+
+- name: Ensure created instances are ready
+  hosts: ceph
+  become: no
+  gather_facts: no
+  tasks:
+    - name: Wait for SSH access to all created ceph instances
+      wait_for:
+        port: 22
+        host: "{{ ansible_host }}"
+        timeout: 320
+        state: started
+      delegate_to: localhost
+
+- name: Apply all common configuration
+  hosts: ceph
+  remote_user: cloud-user
+  become: yes
+  roles:
+    - base
+    - ceph-common
+
+- name: Configure all monitors
+  hosts: cephmons
+  remote_user: cloud-user
+  become: yes
+  roles:
+    - ceph-mon
+
+- name: Configure all object storage daemons
+  hosts: cephosds
+  remote_user: cloud-user
+  become: yes
+  roles:
+    - ceph-osd

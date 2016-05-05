@@ -1,0 +1,76 @@
+---
+- name: Provision OpenStack network resources
+  hosts: localhost
+  gather_facts: no
+  become: no
+  tasks:
+    - name: Ensure the ceph security group is created
+      os_security_group:
+        auth: "{{ os_auth }}"
+        availability_zone: "{{ os_availability_zone }}"
+        name: ceph
+        description: ceph security group
+        state: present
+        wait: yes
+      register: ceph_security_group
+
+    - name: Add all ingress rules to the ceph security group
+      os_security_group_rule:
+        auth: "{{ os_auth }}"
+        availability_zone: "{{ os_availability_zone }}"
+        security_group: ceph
+        remote_group: "{{ ceph_security_group.id }}"
+        direction: ingress
+        protocol: "{{ item }}"
+        state: present
+        wait: yes
+      with_items:
+        - icmp
+        - udp
+        - tcp
+
+    - name: Add all egress rules to the ceph security group
+      os_security_group_rule:
+        auth: "{{ os_auth }}"
+        availability_zone: "{{ os_availability_zone }}"
+        security_group: ceph
+        direction: egress
+        port_range_max: "{{ item.port_range_max }}"
+        port_range_min: "{{ item.port_range_min }}"
+        protocol: "{{ item.protocol }}"
+        remote_ip_prefix: 0.0.0.0/0
+        state: present
+        wait: yes
+      with_items:
+        - port_range_max: -1
+          port_range_min: -1
+          protocol: icmp
+        - port_range_max: 65535
+          port_range_min: 1
+          protocol: tcp
+        - port_range_max: 65535
+          port_range_min: 1
+          protocol: udp
+
+    - name: Ensure the ssh security group is created
+      os_security_group:
+        auth: "{{ os_auth }}"
+        availability_zone: "{{ os_availability_zone }}"
+        name: ssh
+        description: allow ssh
+        state: present
+        wait: yes
+      register: ssh_security_group
+
+    - name: Add all ingress rules to the ssh security group
+      os_security_group_rule:
+        auth: "{{ os_auth }}"
+        availability_zone: "{{ os_availability_zone }}"
+        security_group: ssh
+        port_range_max: 22
+        port_range_min: 22
+        remote_ip_prefix: 0.0.0.0/0
+        direction: ingress
+        protocol: tcp
+        state: present
+        wait: yes

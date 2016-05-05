@@ -1,0 +1,6 @@
+galaxy-roles/
+group_vars/all/rhn.yml
+*.keyring
+fetch/
+*.DS_Store
+*.pyc

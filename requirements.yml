@@ -1,0 +1,13 @@
+---
+- src: https://github.com/wtcross/ansible-example-role-base.git
+  name: base
+  version: master
+- name: ceph-common
+  src: https://github.com/ceph/ansible-ceph-common.git
+  version: master
+- name: ceph-mon
+  src: https://github.com/ceph/ansible-ceph-mon.git
+  version: master
+- name: ceph-osd
+  src: https://github.com/ceph/ansible-ceph-osd.git
+  version: master

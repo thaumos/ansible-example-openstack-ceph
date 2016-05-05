@@ -1,0 +1,25 @@
+---
+ceph_storage_volume_size: 50
+osd_count: 2
+mon_count: 1
+cluster: ceph
+
+mon_group_name: cephmons
+osd_group_name: cephosds
+
+ceph_origin: upstream
+ceph_stable_rh_storage: yes
+ceph_stable_rh_storage_cdn_install: yes
+generate_fsid: no
+fsid: b08094da-0716-11e6-b512-3e1d05defe78
+
+## Monitor options
+#
+monitor_interface: eth0
+mon_use_fqdn: no
+
+## OSD options
+#
+journal_size: 512
+public_network: "{{ os_network_cidr }}"
+cluster_network: "{{ os_network_cidr }}"

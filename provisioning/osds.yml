@@ -1,0 +1,79 @@
+---
+- name: Provision OSD compute instances and storage volumes
+  hosts: localhost
+  gather_facts: no
+  become: no
+  tasks:
+    - name: Create storage volumes
+      os_volume:
+        auth: "{{ os_auth }}"
+        display_name: ceph-storage-{{ item }}
+        display_description: persistent ceph storage volume
+        availability_zone: "{{ os_availability_zone }}"
+        size: "{{ ceph_storage_volume_size }}"
+        wait: no
+        state: present
+      with_sequence: start=0 end={{ osd_count - 1 }} stride=1
+
+    - name: Wait for all storage volumes to be ready
+      os_volume:
+        auth: "{{ os_auth }}"
+        display_name: ceph-storage-{{ item }}
+        display_description: persistent ceph storage volume
+        availability_zone: "{{ os_availability_zone }}"
+        size: "{{ ceph_storage_volume_size }}"
+        wait: yes
+        state: present
+      with_sequence: start=0 end={{ osd_count - 1 }} stride=1
+      register: ceph_storage_volumes
+
+    - name: Launch ceph OSD compute instances
+      os_server:
+        auth: "{{ os_auth }}"
+        name: ceph-osd-{{ item }}
+        auto_ip: no
+        image: "{{ os_image }}"
+        flavor: "{{ os_flavor }}"
+        key_name: "{{ os_key_pair }}"
+        nics:
+          - net-name: "{{ os_network_name }}"
+        volumes:
+          - ceph-storage-{{ item }}
+        security_groups:
+          - ssh
+          - ceph
+        wait: no
+        state: present
+      with_sequence: start=0 end={{ osd_count - 1 }} stride=1
+
+    - name: Wait a little while for instances to get out of BUILD state
+      pause:
+        seconds: 20
+
+    - name: Wait for all OSD compute instances to be ready
+      os_server:
+        auth: "{{ os_auth }}"
+        name: ceph-osd-{{ item }}
+        auto_ip: no
+        image: "{{ os_image }}"
+        flavor: "{{ os_flavor }}"
+        key_name: "{{ os_key_pair }}"
+        nics:
+          - net-name: "{{ os_network_name }}"
+        volumes:
+          - ceph-storage-{{ item }}
+        security_groups:
+          - ssh
+          - ceph
+        wait: yes
+        state: present
+      with_sequence: start=0 end={{ osd_count - 1 }} stride=1
+      register: ceph_osd_compute_instances
+
+    - name: Add all provisioned OSD instances to inventory
+      add_host:
+        name: "{{ item.1.openstack.name }}"
+        groups: ceph,cephosds
+        ansible_host: "{{ item.1.openstack.private_v4 }}"
+      changed_when: false
+      with_indexed_items: ceph_osd_compute_instances.results

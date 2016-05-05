@@ -1,0 +1,80 @@
+---
+- name: Load Tower credentials
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  become: no
+  tasks:
+    - name: Load Tower cloud credential config when it is present
+      include_vars: "{{ os_config_file }}"
+      when: os_config_file != ''
+
+    - name: Set necessary variables when Tower cloud credential config is present
+      set_fact:
+        os_auth:
+          auth_url: "{{ clouds.devstack.auth.auth_url }}"
+          username: "{{ clouds.devstack.auth.username }}"
+          password: "{{ clouds.devstack.auth.password }}"
+          project_name: "{{ clouds.devstack.auth.project_name }}"
+      when: os_config_file != ''
+
+    - name: Fail if fallback environment variables are not set
+      fail:
+        msg: "missing required environment variable: '{{ item }}'"
+      when: os_config_file == '' and lookup('env', item) is undefined
+      with_items:
+        - OS_AUTH_URL
+        - OS_USERNAME
+        - OS_PASSWORD
+        - OS_PROJECT
+
+- name: Deprovision OpenStack resources
+  hosts: localhost
+  gather_facts: no
+  become: no
+  tasks:
+    - name: Terminate cluster OSD instances
+      os_server:
+        auth: "{{ os_auth }}"
+        name: ceph-osd-{{ item }}
+        auto_ip: no
+        image: "{{ os_image }}"
+        flavor: "{{ os_flavor }}"
+        key_name: "{{ os_key_pair }}"
+        nics:
+          - net-name: "{{ os_network_name }}"
+        volumes:
+          - ceph-osd-{{ item }}
+        security_groups:
+          - ssh
+          - ceph
+        state: absent
+      with_sequence: start=0 end={{ osd_count - 1 }} stride=1
+
+    - name: Terminate cluster monitor instances
+      os_server:
+        auth: "{{ os_auth }}"
+        name: ceph-mon-{{ item }}
+        auto_ip: no
+        image: "{{ os_image }}"
+        flavor: "{{ os_flavor }}"
+        key_name: "{{ os_key_pair }}"
+        nics:
+          - net-name: "{{ os_network_name }}"
+        volumes:
+          - ceph-mon-{{ item }}
+        security_groups:
+          - ssh
+          - ceph
+        state: absent
+      with_sequence: start=0 end={{ mon_count - 1 }} stride=1
+
+    - name: Delete cluster OSD storage volumes
+      os_volume:
+        auth: "{{ os_auth }}"
+        display_name: ceph-storage-{{ item }}
+        display_description: persistent ceph storage volume
+        availability_zone: "{{ os_availability_zone }}"
+        size: "{{ ceph_storage_volume_size }}"
+        state: absent
+      with_sequence: start=0 end={{ osd_count - 1 }} stride=1
