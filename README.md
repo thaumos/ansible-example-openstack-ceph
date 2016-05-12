@@ -12,7 +12,7 @@ This project leverages the roles published by the [ceph/ceph-ansible](https://gi
 - [ceph/ansible-ceph-osd](https://github.com/ceph/ansible-ceph-osd)
 - [ceph/ansible-ceph-mon](https://github.com/ceph/ansible-ceph-mon)
 
-The main goal of the project is to demonstrate how role-reuse can be accomplished. The strategy used here is to keep track of all required roles in [requirements.yml](requirements.yml). Local usage and development of this project should install roles to the `galaxy-roles` directory, which is ignored by `[.gitignore](.gitignore)`.
+The main goal of the project is to demonstrate how role-reuse can be accomplished. The strategy used here is to keep track of all required roles in [requirements.yml](requirements.yml). Local usage and development of this project should install roles to the `galaxy-roles` directory, which is ignored by gitignore.
 
 [Ansible Tower](https://www.ansible.com/tower) will automatically download all roles contained in `requirements.yml` as part of a project sync.
 
