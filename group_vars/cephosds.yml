@@ -1,3 +1,8 @@
 ---
-osd_auto_discovery: yes
+devices:
+  - /dev/vdb
+osd_auto_discovery: no
 journal_collocation: yes
+raw_multi_journal: no
+osd_directory: no
+bluestore: no
