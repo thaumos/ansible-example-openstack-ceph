@@ -21,7 +21,10 @@
         security_group: magicDemo
         remote_group: "{{ magicDemo_security_group.id }}"
         direction: ingress
-        protocol: "{{ item }}"
+        port_range_max: "{{ item.port_range_max }}"
+        port_range_min: "{{ item.port_range_min }}"
+        protocol: "{{ item.protocol }}"
+        remote_ip_prefix: 0.0.0.0/0
         state: present
         wait: yes
       with_items:
