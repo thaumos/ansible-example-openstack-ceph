@@ -33,10 +33,10 @@
   gather_facts: no
   become: no
   tasks:
-    - name: Terminate cluster OSD instances
+    - name: Terminate magicDemo instances
       os_server:
         auth: "{{ os_auth }}"
-        name: magicDemo-osd-{{ item }}
+        name: magicDemo-{{ item }}
         auto_ip: no
         image: "{{ os_image }}"
         flavor: "{{ os_flavor }}"
@@ -44,14 +44,14 @@
         nics:
           - net-name: "{{ os_network_name }}"
         volumes:
-          - magicDemo-osd-{{ item }}
+          - magicDemo-{{ item }}
         security_groups:
           - ssh
           - magicDemo
         state: absent
       with_sequence: start=0 end={{ osd_count - 1 }} stride=1
 
-    - name: Delete cluster OSD storage volumes
+    - name: Delete magicDemo storage volumes
       os_volume:
         auth: "{{ os_auth }}"
         display_name: magicDemo-storage-{{ item }}

@@ -27,10 +27,10 @@
       with_sequence: start=0 end={{ osd_count - 1 }} stride=1
       register: magicDemo_storage_volumes
 
-    - name: Launch ceph OSD compute instances
+    - name: Launch magicDemo compute instances
       os_server:
         auth: "{{ os_auth }}"
-        name: magicDemo-osd-{{ item }}
+        name: magicDemo-{{ item }}
         auto_ip: no
         image: "{{ os_image }}"
         flavor: "{{ os_flavor }}"
@@ -50,10 +50,10 @@
       pause:
         seconds: 20
 
-    - name: Wait for all OSD compute instances to be ready
+    - name: Wait for all compute instances to be ready
       os_server:
         auth: "{{ os_auth }}"
-        name: magicDemo-osd-{{ item }}
+        name: magicDemo-{{ item }}
         auto_ip: no
         image: "{{ os_image }}"
         flavor: "{{ os_flavor }}"
@@ -68,12 +68,12 @@
         wait: yes
         state: present
       with_sequence: start=0 end={{ osd_count - 1 }} stride=1
-      register: magicDemo_osd_compute_instances
+      register: magicDemo_compute_instances
 
-    - name: Add all provisioned OSD instances to inventory
+    - name: Add all provisioned instances to inventory
       add_host:
         name: "{{ item.1.openstack.name }}"
         groups: magicDemo
         ansible_host: "{{ item.1.openstack.private_v4 }}"
       changed_when: false
-      with_indexed_items: magicDemo_osd_compute_instances.results
+      with_indexed_items: magicDemo_compute_instances.results
