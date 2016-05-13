@@ -25,9 +25,15 @@
         state: present
         wait: yes
       with_items:
-        - icmp
-        - udp
-        - tcp
+        - port_range_max: -1
+          port_range_min: -1
+          protocol: icmp
+        - port_range_max: 65535
+          port_range_min: 1
+          protocol: tcp
+        - port_range_max: 65535
+          port_range_min: 1
+          protocol: udp
 
     - name: Add all egress rules to the magicDemo security group
       os_security_group_rule:
