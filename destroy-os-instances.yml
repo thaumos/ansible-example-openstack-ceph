@@ -57,6 +57,6 @@
         display_name: magicDemo-storage-{{ item }}
         display_description: persistent ceph storage volume
         availability_zone: "{{ os_availability_zone }}"
-        size: "{{ ceph_storage_volume_size }}"
+        size: "{{ magicDemo_storage_volume_size }}"
         state: absent
       with_sequence: start=0 end={{ osd_count - 1 }} stride=1
