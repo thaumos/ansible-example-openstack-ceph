@@ -41,7 +41,7 @@
           - magicDemo-storage-{{ item }}
         security_groups:
           - ssh
-          - ceph
+          - magicDemo
         wait: no
         state: present
       with_sequence: start=0 end={{ osd_count - 1 }} stride=1
