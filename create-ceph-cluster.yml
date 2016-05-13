@@ -30,10 +30,9 @@
 
 - include: provisioning/common.yml
 - include: provisioning/osds.yml
-- include: provisioning/mons.yml
 
 - name: Ensure created instances are ready
-  hosts: ceph
+  hosts: magicDemo
   become: no
   gather_facts: no
   tasks:
@@ -44,25 +43,3 @@
         timeout: 320
         state: started
       delegate_to: localhost
-
-- name: Apply all common configuration
-  hosts: ceph
-  remote_user: cloud-user
-  become: yes
-  roles:
-    - base
-    - ceph.ceph-common
-
-- name: Configure all monitors
-  hosts: cephmons
-  remote_user: cloud-user
-  become: yes
-  roles:
-    - ceph.ceph-mon
-
-- name: Configure all object storage daemons
-  hosts: cephosds
-  remote_user: cloud-user
-  become: yes
-  roles:
-    - ceph.ceph-osd

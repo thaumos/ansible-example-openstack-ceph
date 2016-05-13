@@ -5,7 +5,7 @@ os_image: rhel-7.2
 os_flavor: m1.small
 os_network_name: direct
 os_network_cidr: 10.12.48.0/24
-os_key_pair: tcross
+os_key_pair: dsilva
 
 os_auth:
   project_name: "{{ lookup('env', 'OS_PROJECT') }}"

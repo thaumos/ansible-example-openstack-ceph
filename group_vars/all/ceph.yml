@@ -1,5 +1,5 @@
 ---
-ceph_storage_volume_size: 50
+magicDemo_storage_volume_size: 50
 osd_count: 2
 mon_count: 1
 cluster: ceph
